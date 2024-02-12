@@ -7,6 +7,45 @@ Second argument is the output file name """
 import sys
 import os
 
+if __name__ == "__main__":
+        markdown_text = """
+    # Heading level 1
+    ## Heading level 2
+    ### Heading level 3
+    #### Heading level 4
+    ##### Heading level 5
+    ###### Heading level 6
+    
+    - Hello
+    - Bye
+    
+    * Hello
+    * Bye
+    
+    Hello
+    
+    I'm a text
+    with 2 lines
+        """
+        html_output = markdown_to_html(markdown_text)
+        print(html_output)
+    
+    
+    '''
+    if len(sys.argv) < 3:
+        print("Usage: ./markdown2html.py README.md README.html", file=sys.stderr)
+        sys.exit(1)
+    
+    markdown_file = sys.argv[1]
+    output_file = sys.argv[2]
+    
+    if not os.path.exists(markdown_file):
+        print(f"Missing {markdown_file}", file=sys.stderr)
+        sys.exit(1)
+    '''
+    
+    sys.exit(0)
+
 def markdown_to_html(markdown_text):
     html_text= ''
     html_text1= ''
@@ -71,42 +110,3 @@ def markdown_to_html(markdown_text):
 
 
 
-
-if __name__ == "__main__":
-    markdown_text = """
-# Heading level 1
-## Heading level 2
-### Heading level 3
-#### Heading level 4
-##### Heading level 5
-###### Heading level 6
-
-- Hello
-- Bye
-
-* Hello
-* Bye
-
-Hello
-
-I'm a text
-with 2 lines
-    """
-    html_output = markdown_to_html(markdown_text)
-    print(html_output)
-
-
-'''
-if len(sys.argv) < 3:
-    print("Usage: ./markdown2html.py README.md README.html", file=sys.stderr)
-    sys.exit(1)
-
-markdown_file = sys.argv[1]
-output_file = sys.argv[2]
-
-if not os.path.exists(markdown_file):
-    print(f"Missing {markdown_file}", file=sys.stderr)
-    sys.exit(1)
-'''
-
-#sys.exit(0)
