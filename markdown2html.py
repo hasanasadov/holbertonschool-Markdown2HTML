@@ -6,107 +6,104 @@ Second argument is the output file name """
 
 import sys
 import os
+import hashlib
+import re
 
+def To_HTML(name,text):
+    return "<"+name+">"+text+"</"+name+">\n"
+
+def Heading(line):    
+    count = line.count('#')
+    name = "H"+str(count)
+    return To_HTML(name,line[count+1:])
+
+def UO_List(lines,name):
+    text = ""
+    for line in lines:
+        text += "\t" + To_HTML("li",line[2:])
+    return To_HTML(name,"\n" + text)
+
+def Paragraph(lines):
+    text = ""
+    for line in lines:
+        if(line!=lines[0]):
+            text +='<br/>'
+        text += '\n\t' + line + '\n'  
+    return To_HTML('p',text)
+
+def GetLines(lines,char = '', IsAlpha = False):
+    L = [Bold(Em(SQ_brackets(Brackets(lines[0]))))]
+    lines.remove(lines[0])
+    while(len(lines) != 0):
+        line = lines[0]
+        if(line==''):
+            break
+        if((line[0].isalpha and IsAlpha) or line[0] == char):
+            lines.remove(line)
+            line = Bold(Em(SQ_brackets(Brackets(line))))
+            L.append(line)
+        else: 
+            break
+    return L
+
+def Bold(line):
+    line = re.sub("\*\*","<b>",line,1)
+    line = re.sub("\*\*","</b>",line,1)
+    return line
+
+def Em(line):
+    line = re.sub("__","<em>",line,1)
+    line = re.sub("__","</em>",line,1)
+    return line
+
+def SQ_brackets(line):
+    id = line.find("[[")
+    id2 = line.find("]]")
+    if(id!=-1 and id2!=-1):
+        text = line[id+2:id2]
+        line = line[:id] + str(hashlib.md5(text.encode()).hexdigest())+ line[id2+2:]
+    return line
+
+def Brackets(line):
+    id = line.find("((")
+    id2 = line.find("))")
+    if(id!=-1 and id2!=-1):
+        text = line[id+2:id2]
+        text = text.replace('c','')
+        text = text.replace('C','')
+        line = line[:id] + text + line[id2+2:]
+    return line
+    
 if __name__ == "__main__":
-        markdown_text = """
-    # Heading level 1
-    ## Heading level 2
-    ### Heading level 3
-    #### Heading level 4
-    ##### Heading level 5
-    ###### Heading level 6
-    
-    - Hello
-    - Bye
-    
-    * Hello
-    * Bye
-    
-    Hello
-    
-    I'm a text
-    with 2 lines
-        """
-        html_output = markdown_to_html(markdown_text)
-        print(html_output)
-    
-    
-    '''
     if len(sys.argv) < 3:
-        print("Usage: ./markdown2html.py README.md README.html", file=sys.stderr)
-        sys.exit(1)
-    
-    markdown_file = sys.argv[1]
-    output_file = sys.argv[2]
-    
-    if not os.path.exists(markdown_file):
-        print(f"Missing {markdown_file}", file=sys.stderr)
-        sys.exit(1)
-    '''
-    
-    sys.exit(0)
-
-def markdown_to_html(markdown_text):
-    html_text= ''
-    html_text1= ''
-    html_text2= ''
-    html_text3= ''
-    html_text4= ''
-    lines = markdown_text.split('\n')
-    in_ordered_list = False
-    in_list = False
-    in_paragraph = False
-
-
-    for line in lines:
-        if line.startswith('# '):
-            html_text1 += f'<h1>{line[2:]}</h1>\n'
-        elif line.startswith('## '):
-            html_text1 += f'<h2>{line[3:]}</h2>\n'
-        elif line.startswith('### '):
-            html_text1 += f'<h3>{line[4:]}</h3>\n'
-        elif line.startswith('#### '):
-            html_text1 += f'<h4>{line[5:]}</h4>\n'
-        elif line.startswith('##### '):
-            html_text1 += f'<h5>{line[6:]}</h5>\n'
-        elif line.startswith('###### '):
-            html_text1 += f'<h6>{line[7:]}</h6>\n'
-    html_text+=html_text1
-
-
-    for line in lines:
-        if line.startswith('- '):
-            if not in_list:
-                html_text2 += '<ul>\n'
-                in_list = True
-            html_text2 += f'    <li>{line[2:]}</li>\n'
-        else:
-            if in_list:
-                html_text2 += '</ul>\n'
-                in_list = False
-    
-    html_text+=html_text2
-
-    for line in lines:
-        if line.startswith('* '):
-            if not in_ordered_list:
-                html_text3 += '<ol>\n'
-                in_ordered_list = True
-            html_text3 += f'    <li>{line[2:]}</li>\n'
-        else:
-            if in_ordered_list:
-                html_text3 += '</ol>\n'
-                in_ordered_list = False
-
-    html_text+=html_text3
-
-    for line in lines:
-        if line.strip() and line[+1].strip():
-             
+        sys.stderr.write("Usage: ./markdown2html.py README.md README.html\n")
+        exit(1)
+    if not os.path.exists(sys.argv[1]):
+        sys.stderr.write("Missing " + sys.argv[1] + "\n")
+        exit(1)
+    with open(sys.argv[1]) as IN:
+        with open(sys.argv[2], 'w') as OUT:
+            lines = IN.read().splitlines()
+            html = ""
             
-
-
-    return html_text
-
-
-
+            while(len(lines) != 0):
+                line = lines[0]
+                if(line == ""):
+                    lines.remove(line)
+                else:
+                    line = Bold(Em(SQ_brackets(Brackets(line))))
+                    
+                    if(line[0]=="#"):
+                        html += Heading(line)
+                        del lines[0]
+                    elif(line[0]=='-'):
+                        L = GetLines(lines,'-')
+                        html += UO_List(L,"ul")        
+                    elif(line[0]=='*'):
+                        L = GetLines(lines,'*')
+                        html += UO_List(L,"ol")
+                    elif(line[0].isalpha):
+                        L = GetLines(lines, IsAlpha = True)
+                        html += Paragraph(L)
+            OUT.write(html)
+    exit(0)
